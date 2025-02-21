@@ -84,6 +84,44 @@ async function handleAPIRequest(req: Request): Promise<Response> {
   }
 }
 
+async function handleGoogleAPIRequest(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const targetUrl = `https://generativelanguage.googleapis.com${url.pathname}${url.search}`;
+  
+  // 创建新的请求头，保留原始请求的相关头部
+  const headers = new Headers(req.headers);
+  
+  // 创建新的请求
+  const proxyRequest = new Request(targetUrl, {
+    method: req.method,
+    headers: headers,
+    body: req.body,
+    redirect: 'follow',
+  });
+
+  try {
+    const response = await fetch(proxyRequest);
+    
+    // 创建新的响应头
+    const responseHeaders = new Headers(response.headers);
+    
+    // 返回代理响应
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    console.error('Proxy request error:', error);
+    return new Response('Proxy Error', { 
+      status: 500,
+      headers: {
+        'content-type': 'text/plain;charset=UTF-8',
+      }
+    });
+  }
+}
+
 async function handleRequest(req: Request): Promise<Response> {
   const url = new URL(req.url);
   console.log('Request URL:', req.url);
@@ -91,6 +129,11 @@ async function handleRequest(req: Request): Promise<Response> {
   // WebSocket 处理
   if (req.headers.get("Upgrade")?.toLowerCase() === "websocket") {
     return handleWebSocket(req);
+  }
+
+  // 检查是否是 Google API 请求
+  if (url.pathname.startsWith('/v1beta/')) {
+    return handleGoogleAPIRequest(req);
   }
 
   if (url.pathname.endsWith("/chat/completions") ||
