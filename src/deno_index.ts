@@ -132,9 +132,9 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   // 检查是否是 Google API 请求
-  if (url.pathname.startsWith('/v1beta/')) {
-    return handleGoogleAPIRequest(req);
-  }
+  //if (url.pathname.startsWith('/v1beta/')) {
+  //  return handleGoogleAPIRequest(req);
+  //}
 
   if (url.pathname.endsWith("/chat/completions") ||
       url.pathname.endsWith("/embeddings") ||
